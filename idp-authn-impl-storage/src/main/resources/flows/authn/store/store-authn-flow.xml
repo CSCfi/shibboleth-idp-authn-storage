@@ -1,0 +1,37 @@
+<flow xmlns="http://www.springframework.org/schema/webflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd"
+    parent="authn.abstract, authn/conditions">
+
+    <action-state id="PopulateClientStorageLoadContext">
+        <evaluate expression="PopulateClientStorageLoadContext" />
+        <evaluate expression="'proceed'" />
+        <transition on="proceed" to="ClientStorageLoad" />
+        <transition on="NoLoadNeeded" to="StoreAuthenticationEvent" />
+    </action-state>
+
+    <subflow-state id="ClientStorageLoad" subflow="client-storage/read">
+        <input name="calledAsSubflow" value="true" />
+        <transition on="proceed" to="StoreAuthenticationEvent" />
+    </subflow-state>
+
+    <action-state id="StoreAuthenticationEvent">
+        <evaluate expression="StoreAuthenticationEvent" />
+        <evaluate expression="PopulateClientStorageSaveContext" />
+        <evaluate expression="'proceed'" />
+        <transition on="proceed" to="ClientStorageSave" />
+    </action-state>
+
+    <subflow-state id="ClientStorageSave" subflow="client-storage/write">
+        <input name="calledAsSubflow" value="true" />
+        <transition to="proceed" />
+    </subflow-state>
+
+    <!-- As a "fall-through" method, in case of unmapped events we just stop and leave task. -->
+    <global-transitions>
+        <transition on="#{!'proceed'.equals(currentEvent.id)}" to="proceed" />
+    </global-transitions>
+
+    <bean-import resource="store-authn-beans.xml" />
+
+</flow>
+

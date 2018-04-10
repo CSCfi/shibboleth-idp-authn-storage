@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:c="http://www.springframework.org/schema/c" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+
+    default-init-method="initialize" default-destroy-method="destroy">
+
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer" p:placeholderPrefix="%{"
+        p:placeholderSuffix="}" />
+
+    <bean class="net.shibboleth.ext.spring.config.IdentifiableBeanPostProcessor" />
+    <bean class="net.shibboleth.idp.profile.impl.ProfileActionBeanPostProcessor" />
+
+    <bean id="PopulateClientStorageLoadContext"
+        class="org.opensaml.storage.impl.client.PopulateClientStorageLoadContext" scope="prototype"
+        p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
+
+
+    <bean id="ExtractStorageAuthenticationEvent" class="fi.csc.idp.authn.impl.ExtractStorageAuthenticationEvent"
+        scope="prototype" p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache"
+        p:storageUsernameAuthenticationFlowDescriptors-ref="StorageUsernameAuthenticationFlows" />
+
+    <bean id="VerifyStorageAuthenticationEvent" class="fi.csc.idp.authn.impl.VerifyStorageAuthenticationEvent"
+        p:defaultLimits-ref="AuthenticationEventLimits" p:relyingPartyLimits-ref="RelyingPartyLimits" scope="prototype" />
+
+    <bean id="ValidateStorageAuthentication" class="fi.csc.idp.authn.impl.ValidateStorageAuthentication"
+        scope="prototype" />
+
+    <bean id="UpdateStorageAuthenticationEvent" class="fi.csc.idp.authn.impl.UpdateStorageAuthenticationEvent"
+        scope="prototype" p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache" />
+
+    <bean id="shibboleth.AuthenticationEventCache" class="fi.csc.idp.authn.storage.AuthenticationEventCache"
+        depends-on="shibboleth.LoggingService"
+        p:entryExpiration="#{'%{idp.oidc.revocationCache.authorizeCode.lifetime:PT6H}'}"
+        p:referenceStorage-ref="shibboleth.ClientPersistentStorageService" />
+
+    <bean id="PopulateSubjectCanonicalizationContext"
+        class="net.shibboleth.idp.authn.impl.PopulateSubjectCanonicalizationContext" scope="prototype"
+        p:availableFlows-ref="shibboleth.PostLoginSubjectCanonicalizationFlows" />
+
+    <bean id="PopulateClientStorageSaveContext"
+        class="org.opensaml.storage.impl.client.PopulateClientStorageSaveContext" scope="prototype"
+        p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
+
+    <!-- Authentication flows used for storage authentication -->
+    <bean id="authn/IPAddress" parent="shibboleth.AuthenticationFlow" />
+
+    <!-- List flow(s) used to identify user prior the stored flow. The Username of the first flow providing it in the list 
+        will be used as the key -->
+    <util:list id="StorageUsernameAuthenticationFlows">
+        <ref bean="authn/IPAddress" />
+    </util:list>
+
+    <!-- Parent bean to inherit auth event limits from -->
+    <bean id="RPLimits" class="fi.csc.idp.authn.storage.AuthenticationEventRelyingPartyLimits" />
+    <!-- Default limits for auth events -->
+    <bean id="AuthenticationEventLimits" parent="RPLimits" p:authenticationMaxAge="PT48H"
+        p:lastAppliedMaxAge="PT8H" p:appliedTimesMax="10" />
+
+    <!-- List rp specific limits for auth events -->
+    <util:list id="RelyingPartyLimits">
+        <bean id="demo_rp" parent="RPLimits" p:relyingPartyId="demo_rp" p:authenticationMaxAge="PT24H"
+            p:lastAppliedMaxAge="PT4H" p:appliedTimesMax="1" />
+        <bean id="demo_rp2" parent="RPLimits" p:relyingPartyId="demo_rp2" p:authenticationMaxAge="PT1H" />
+    </util:list>
+
+
+</beans>
