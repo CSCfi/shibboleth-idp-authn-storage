@@ -45,13 +45,14 @@ import com.google.common.base.Function;
 import fi.csc.idp.authn.context.StorageAuthenticationContext;
 import fi.csc.idp.authn.storage.AuthenticationEventRelyingPartyLimits;
 
+/** Action verifying the authentication event passes the requirements. */
 @SuppressWarnings("rawtypes")
 public class VerifyStorageAuthenticationEvent extends AbstractAuthenticationAction {
 
     /** Class logger. */
     @Nonnull
     private final Logger log = LoggerFactory.getLogger(VerifyStorageAuthenticationEvent.class);
-   
+
     /** Relying party context to get rp id. */
     private RelyingPartyContext relyingPartyCtx;
 
@@ -74,8 +75,6 @@ public class VerifyStorageAuthenticationEvent extends AbstractAuthenticationActi
     VerifyStorageAuthenticationEvent() {
         relyingPartyContextLookupStrategy = new ChildContextLookup<>(RelyingPartyContext.class);
     }
-
-    
 
     /**
      * Set the relying party context lookup strategy.
@@ -137,13 +136,17 @@ public class VerifyStorageAuthenticationEvent extends AbstractAuthenticationActi
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext,
             @Nonnull final AuthenticationContext authenticationContext) {
 
-        if (storageAuthenticationCtx.getAuthenticationEventNotBefore() > storageAuthenticationCtx.getAuthenticationEvent().getIssuedAt()) {
+        // See if the event is revoked
+        if (storageAuthenticationCtx.getAuthenticationEventNotBefore() > storageAuthenticationCtx
+                .getAuthenticationEvent().getIssuedAt()) {
             log.debug("{} Authentication event iat {} is not passing for not before {}", getLogPrefix(),
-                    storageAuthenticationCtx.getAuthenticationEvent().getIssuedAt(), storageAuthenticationCtx.getAuthenticationEventNotBefore());
+                    storageAuthenticationCtx.getAuthenticationEvent().getIssuedAt(),
+                    storageAuthenticationCtx.getAuthenticationEventNotBefore());
             ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.INVALID_CREDENTIALS);
             return;
         }
 
+        // Use either global or rp specific limits
         AuthenticationEventRelyingPartyLimits aeLimits = defaultRPLimits;
         String rpId = relyingPartyCtx.getRelyingPartyId();
         if (rpId != null && rpLimits != null) {
@@ -154,6 +157,8 @@ public class VerifyStorageAuthenticationEvent extends AbstractAuthenticationActi
                 }
             }
         }
+
+        // Check authentication max age
         if (aeLimits.getAuthenticationMaxAge() != 0) {
             long dueTime = storageAuthenticationCtx.getAuthenticationEvent().getAuthTime()
                     + (aeLimits.getAuthenticationMaxAge());
@@ -165,6 +170,8 @@ public class VerifyStorageAuthenticationEvent extends AbstractAuthenticationActi
                 return;
             }
         }
+
+        // Check rolling window
         if (aeLimits.getLastAppliedMaxAge() != 0) {
             long dueTime = storageAuthenticationCtx.getAuthenticationEvent().getAppliedTime()
                     + (aeLimits.getLastAppliedMaxAge());
@@ -176,6 +183,8 @@ public class VerifyStorageAuthenticationEvent extends AbstractAuthenticationActi
                 return;
             }
         }
+
+        // Check for max times used
         if (aeLimits.getAppliedTimesMax() != 0) {
             if (aeLimits.getAppliedTimesMax() <= storageAuthenticationCtx.getAuthenticationEvent().getAppliedCount()) {
                 log.debug("{} Authentication event applied count {} is not passing for max value {}", getLogPrefix(),
