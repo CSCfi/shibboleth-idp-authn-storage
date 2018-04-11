@@ -46,13 +46,26 @@
         class="org.opensaml.storage.impl.client.PopulateClientStorageSaveContext" scope="prototype"
         p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
 
+    <bean id="StoreAuthenticationEvent" class="fi.csc.idp.authn.impl.StoreAuthenticationEvent" scope="prototype"
+        p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache"
+        p:storageUsernameAuthenticationFlowDescriptors-ref="StorageUsernameAuthenticationFlows"
+        p:storageAuthenticationEventAuthenticationFlowDescriptors-ref="StorageAuthenticationEventAuthenticationFlows" />
+
+    <!-- Configuration that will be moved to separate file -->
     <!-- Authentication flows used for storage authentication -->
     <bean id="authn/IPAddress" parent="shibboleth.AuthenticationFlow" />
+    <bean id="authn/Password" parent="shibboleth.AuthenticationFlow" />
 
     <!-- List flow(s) used to identify user prior the stored flow. The Username of the first flow providing it in the list 
         will be used as the key -->
     <util:list id="StorageUsernameAuthenticationFlows">
         <ref bean="authn/IPAddress" />
+    </util:list>
+
+    <!-- List flow(s) used which result is stored as authentication event. The result of the first flow providing result 
+        is stored only -->
+    <util:list id="StorageAuthenticationEventAuthenticationFlows">
+        <ref bean="authn/Password" />
     </util:list>
 
     <!-- Parent bean to inherit auth event limits from -->
@@ -67,6 +80,5 @@
             p:lastAppliedMaxAge="PT4H" p:appliedTimesMax="1" />
         <bean id="demo_rp2" parent="RPLimits" p:relyingPartyId="demo_rp2" p:authenticationMaxAge="PT1H" />
     </util:list>
-
 
 </beans>
