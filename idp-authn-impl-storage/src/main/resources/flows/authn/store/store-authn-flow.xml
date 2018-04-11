@@ -33,7 +33,7 @@
         <transition on="#{!'proceed'.equals(currentEvent.id)}" to="proceed" />
     </global-transitions>
 
-    <bean-import resource="store-authn-beans.xml" />
+    <bean-import resource="../storage/storage-authn-beans.xml" />
 
 </flow>
 
