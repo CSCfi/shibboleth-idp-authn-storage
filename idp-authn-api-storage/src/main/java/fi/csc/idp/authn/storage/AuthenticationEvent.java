@@ -101,12 +101,10 @@ public class AuthenticationEvent {
     /**
      * Helper to verify parsed claims are what is expected.
      * 
-     * @param aeClaimsSet auhentication event claims set Must not be NULL.
+     * @param aeClaimsSet authentication event claims set Must not be NULL.
      * @throws ParseException if claims set is not expected one.
      */
-    // Checkstyle: CyclomaticComplexity OFF
     private static void verifyParsedClaims(@Nonnull JSONObject aeClaimsSet) throws ParseException {
-        // Mandatory fields
         if (aeClaimsSet.get(KEY_AE_ID) == null) {
             throw new ParseException("claim jti must exist and not be null", 0);
         }
@@ -116,8 +114,18 @@ public class AuthenticationEvent {
         if (aeClaimsSet.get(KEY_USER_PRINCIPAL) == null) {
             throw new ParseException("claim sub must exist and not be null", 0);
         }
-        // TODO: add rest of checks checking
-
+        if (aeClaimsSet.getAsNumber(KEY_AUTH_TIME) == null) {
+            throw new ParseException("claim auth_time must exist and not be null", 0);
+        }
+        if (aeClaimsSet.getAsNumber(KEY_ISSUED_AT) == null) {
+            throw new ParseException("claim iat must exist and not be null", 0);
+        }
+        if (aeClaimsSet.getAsNumber(KEY_APPLIED_TIME) == null) {
+            throw new ParseException("claim applied_time must exist and not be null", 0);
+        }
+        if (aeClaimsSet.getAsNumber(KEY_APPLIED_COUNT) == null) {
+            throw new ParseException("claim applied_count must exist and not be null", 0);
+        }
     }
 
     /**
