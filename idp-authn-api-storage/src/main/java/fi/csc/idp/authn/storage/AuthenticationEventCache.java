@@ -147,7 +147,7 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
     @SuppressWarnings("rawtypes")
     public AuthenticationEvent locate(@Nonnull @NotEmpty final String userKey) {
         String key;
-        key = DigestUtils.sha256Hex(userKey + userSalt).substring(0,32);
+        key = DigestUtils.sha256Hex(userKey + userSalt).substring(0,64);
         log.debug("User {} hashed to {}", userKey, key);
         lock.lock();
         try {
@@ -173,7 +173,7 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
 
     public boolean set(@Nonnull @NotEmpty final String userKey, @Nonnull @NotEmpty final AuthenticationEvent value) {
         String key;
-        key = DigestUtils.sha256Hex(userKey + userSalt).substring(0,32);
+        key = DigestUtils.sha256Hex(userKey + userSalt).substring(0,64);
         log.debug("User {} hashed to {}", userKey, key);
         lock.lock();
         try {
