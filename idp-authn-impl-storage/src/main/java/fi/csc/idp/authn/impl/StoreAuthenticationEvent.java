@@ -256,7 +256,7 @@ public class StoreAuthenticationEvent extends AbstractAuthenticationAction {
         }
         idGenerator = idGeneratorLookupStrategy.apply(profileRequestContext);
         if (idGenerator == null) {
-            log.debug("{} No identifier generation strategy", getLogPrefix());
+            log.error("{} No identifier generation strategy", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_PROFILE_CTX);
             return false;
         }
