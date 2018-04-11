@@ -28,13 +28,14 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.shibboleth.idp.authn.AbstractAuthenticationAction;
+import net.shibboleth.idp.authn.AbstractExtractionAction;
 import net.shibboleth.idp.authn.AuthenticationFlowDescriptor;
 import net.shibboleth.idp.authn.AuthenticationResult;
+import net.shibboleth.idp.authn.AuthnEventIds;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
 import net.shibboleth.idp.authn.principal.UsernamePrincipal;
-import net.shibboleth.idp.profile.ActionSupport;
+import org.opensaml.profile.action.ActionSupport;
 import net.shibboleth.utilities.java.support.annotation.constraint.NonnullAfterInit;
 import net.shibboleth.utilities.java.support.annotation.constraint.NonnullElements;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
@@ -63,7 +64,7 @@ import fi.csc.idp.authn.storage.AuthenticationEventCache;
  * stored to context for further evaluation.
  */
 @SuppressWarnings({"rawtypes"})
-public class ExtractStorageAuthenticationEvent extends AbstractAuthenticationAction {
+public class ExtractStorageAuthenticationEvent extends AbstractExtractionAction {
 
     /** Class logger. */
     @Nonnull
@@ -178,6 +179,7 @@ public class ExtractStorageAuthenticationEvent extends AbstractAuthenticationAct
         }
         if (usernames.isEmpty()) {
             log.debug("{} No existing mfa usernames available, nothing to do", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.NO_CREDENTIALS);
             return false;
         }
         return true;
@@ -201,7 +203,8 @@ public class ExtractStorageAuthenticationEvent extends AbstractAuthenticationAct
                 return;
             }
         }
-        log.debug("{} Authentication event not available", getLogPrefix());
+        log.debug("{} no user credentials, authentication event not available", getLogPrefix());
+        ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.NO_CREDENTIALS);
         return;
     }
 
