@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import fi.csc.idp.authn.context.StorageAuthenticationContext;
 import fi.csc.idp.authn.storage.AuthenticationEventCache;
 
+/** Action updating the authentication event. Each time event is applied the applied time and count are updated. */
 @SuppressWarnings("rawtypes")
 public class UpdateStorageAuthenticationEvent extends AbstractAuthenticationAction {
 
@@ -57,16 +58,6 @@ public class UpdateStorageAuthenticationEvent extends AbstractAuthenticationActi
     private AuthenticationEventCache authenticationEventCache;
 
     /**
-     * Get the authentication event cache instance to use.
-     * 
-     * @return Returns the authentication event cache.
-     */
-    @NonnullAfterInit
-    public AuthenticationEventCache getAuthenticationEventCache() {
-        return authenticationEventCache;
-    }
-
-    /**
      * Set the authentication event cache instance to use.
      * 
      * @param cache The authentication event cache to set.
@@ -80,7 +71,7 @@ public class UpdateStorageAuthenticationEvent extends AbstractAuthenticationActi
     @Override
     protected void doInitialize() throws ComponentInitializationException {
         super.doInitialize();
-        Constraint.isNotNull(getAuthenticationEventCache(), "authentication event cache cannot be null");
+        Constraint.isNotNull(authenticationEventCache, "authentication event cache cannot be null");
     }
 
     /** {@inheritDoc} */
@@ -105,7 +96,12 @@ public class UpdateStorageAuthenticationEvent extends AbstractAuthenticationActi
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext,
             @Nonnull final AuthenticationContext authenticationContext) {
 
+        /**
+         * If there is storage context in this phase we may assume it containing event. If that is not the case we are
+         * dealing with programming error is okay to lead to runtime error.
+         */
         storageAuthenticationCtx.getAuthenticationEvent().apply();
+        /** We choose to ignore failing the update. */
         authenticationEventCache.set(storageAuthenticationCtx.getUsername(),
                 storageAuthenticationCtx.getAuthenticationEvent());
     }
