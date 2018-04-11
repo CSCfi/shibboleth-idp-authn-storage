@@ -2,6 +2,8 @@
     xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd"
     parent="authn.abstract">
 
+    <!-- This is not a true authentication flow as it only stores results instead of producing them. -->
+
     <action-state id="PopulateClientStorageLoadContext">
         <evaluate expression="PopulateClientStorageLoadContext" />
         <evaluate expression="'proceed'" />
