@@ -15,7 +15,6 @@
     </subflow-state>
 
     <action-state id="StorageAuthentication">
-        <!-- tähän tai aiempaan kohtaan forceAuthn -> ReselectFlow.. VAI TULEEKO SE MFA Contekstiin? EHKÄ -->
         <evaluate expression="ExtractStorageAuthenticationEvent" />
         <evaluate expression="VerifyStorageAuthenticationEvent" />
         <evaluate expression="ValidateStorageAuthentication" />
@@ -48,8 +47,8 @@
     <!-- As a "fall-through" method, remap all errors to ReselectFlow. -->
     <global-transitions>
         <transition on="NoCredentials" to="ReselectFlow" />
+        <transition on="InvalidCredentials" to="ReselectFlow" />
     </global-transitions>
-
 
     <bean-import resource="storage-authn-beans.xml" />
 
