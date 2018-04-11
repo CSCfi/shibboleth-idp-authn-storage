@@ -1,6 +1,6 @@
 <flow xmlns="http://www.springframework.org/schema/webflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd"
-    parent="authn.abstract, authn/conditions">
+    parent="authn.abstract">
 
     <action-state id="PopulateClientStorageLoadContext">
         <evaluate expression="PopulateClientStorageLoadContext" />
@@ -26,7 +26,7 @@
         <transition to="proceed" />
     </subflow-state>
 
-    <!-- As a "fall-through" method, in case of unmapped events we just stop and leave task. -->
+    <!-- We do not want to return error for failing the event storing. -->
     <global-transitions>
         <transition on="#{!'proceed'.equals(currentEvent.id)}" to="proceed" />
     </global-transitions>
