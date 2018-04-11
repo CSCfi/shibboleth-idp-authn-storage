@@ -31,10 +31,11 @@ import javax.annotation.Nullable;
 import net.shibboleth.idp.authn.AbstractAuthenticationAction;
 import net.shibboleth.idp.authn.AuthenticationFlowDescriptor;
 import net.shibboleth.idp.authn.AuthenticationResult;
+import net.shibboleth.idp.authn.AuthnEventIds;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
 import net.shibboleth.idp.authn.principal.UsernamePrincipal;
-import net.shibboleth.idp.profile.ActionSupport;
+import org.opensaml.profile.action.ActionSupport;
 import net.shibboleth.idp.profile.IdPEventIds;
 import net.shibboleth.idp.profile.context.RelyingPartyContext;
 import net.shibboleth.idp.profile.context.navigate.ResponderIdLookupFunction;
@@ -60,6 +61,7 @@ import com.google.common.collect.Iterables;
 import fi.csc.idp.authn.storage.AuthenticationEvent;
 import fi.csc.idp.authn.storage.AuthenticationEventCache;
 
+/** Action storing authentication event for user. */
 @SuppressWarnings({"rawtypes"})
 public class StoreAuthenticationEvent extends AbstractAuthenticationAction {
 
@@ -269,6 +271,7 @@ public class StoreAuthenticationEvent extends AbstractAuthenticationAction {
         }
         if (userName == null) {
             log.debug("{} username not solved, nothing to do", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.INVALID_SUBJECT);
             return false;
         }
         for (String flowId : storageAuthenticationEventAuthenticationFlows) {
@@ -278,6 +281,7 @@ public class StoreAuthenticationEvent extends AbstractAuthenticationAction {
             }
         }
         log.debug("{} result not solved, nothing to do", getLogPrefix());
+        ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.INVALID_CREDENTIALS);
         return false;
     }
 
