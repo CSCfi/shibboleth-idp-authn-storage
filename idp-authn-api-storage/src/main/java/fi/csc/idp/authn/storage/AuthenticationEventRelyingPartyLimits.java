@@ -34,12 +34,13 @@ public class AuthenticationEventRelyingPartyLimits {
     /** Relying party the settings target. */
     private String relyingParty = "";
 
-    /** Max age acceptable in s for the authentication. 0 means infinite. */
+    /** Max age acceptable in ms for the authentication. 0 means infinite. */
     @Duration
     private long authenticationMaxAge = 0;
 
     /**
-     * Max time since last use of event for it to be still acceptable i.e. the rolling window effect. 0 means infinite.
+     * Max time in ms since last use of event for it to be still acceptable i.e. the rolling window effect. 0 means
+     * infinite.
      */
     @Duration
     private long lastAppliedMaxAge = 0;
@@ -62,15 +63,14 @@ public class AuthenticationEventRelyingPartyLimits {
      * 
      * @param rp relying party the settings target
      */
-    // TODO: check for nonnull and nonempty
     public void setRelyingPartyId(String rp) {
-        this.relyingParty = rp;
+        relyingParty = rp;
     }
 
     /**
-     * Get max age acceptable in s for the authentication. 0 means infinite.
+     * Get max age acceptable in ms for the authentication. 0 means infinite.
      * 
-     * @return max age acceptable in s for the authentication. 0 means infinite.
+     * @return max age acceptable in ms for the authentication. 0 means infinite.
      */
     @Duration
     public long getAuthenticationMaxAge() {
@@ -78,20 +78,20 @@ public class AuthenticationEventRelyingPartyLimits {
     }
 
     /**
-     * Set Max age acceptable in s for the authentication. 0 means infinite.
+     * Set Max age acceptable inm s for the authentication. 0 means infinite.
      * 
-     * @param maxAge max age acceptable in s for the authentication. 0 means infinite.
+     * @param maxAge max age acceptable in ms for the authentication. 0 means infinite.
      */
     public void setAuthenticationMaxAge(@Duration long maxAge) {
-        this.authenticationMaxAge = maxAge;
+        authenticationMaxAge = maxAge;
     }
 
     /**
-     * Get max time since last use of event for it to be still acceptable i.e. the rolling window effect. 0 means
+     * Get max time in ms since last use of event for it to be still acceptable i.e. the rolling window effect. 0 means
      * infinite.
      * 
-     * @return max time since last use of event for it to be still acceptable i.e. the rolling window effect. 0 means
-     *         infinite.
+     * @return max time in ms since last use of event for it to be still acceptable i.e. the rolling window effect. 0
+     *         means infinite.
      */
     @Duration
     public long getLastAppliedMaxAge() {
@@ -99,14 +99,14 @@ public class AuthenticationEventRelyingPartyLimits {
     }
 
     /**
-     * Set max time since last use of event for it to be still acceptable i.e. the rolling window effect. 0 means
+     * Set max time in ms since last use of event for it to be still acceptable i.e. the rolling window effect. 0 means
      * infinite.
      * 
-     * @param maxAge max time since last use of event for it to be still acceptable i.e. the rolling window effect. 0
-     *            means infinite
+     * @param maxAge max time in ms since last use of event for it to be still acceptable i.e. the rolling window
+     *            effect. 0 means infinite
      */
     public void setLastAppliedMaxAge(@Duration long maxAge) {
-        this.lastAppliedMaxAge = maxAge;
+        lastAppliedMaxAge = maxAge;
     }
 
     /**
@@ -124,6 +124,6 @@ public class AuthenticationEventRelyingPartyLimits {
      * @param max times for stored event to be successfully used to login. 0 means infinite..
      */
     public void setAppliedTimesMax(int max) {
-        this.appliedTimesMax = max;
+        appliedTimesMax = max;
     }
 }
