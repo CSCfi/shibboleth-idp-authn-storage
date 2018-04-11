@@ -61,7 +61,6 @@ public class ValidateStorageAuthentication extends AbstractValidationAction {
 
     /** Constructor. */
     public ValidateStorageAuthentication() {
-        /** todo: what? */
         setMetricName(DEFAULT_METRIC_NAME);
     }
 
@@ -82,7 +81,8 @@ public class ValidateStorageAuthentication extends AbstractValidationAction {
         storageAuthenticationCtx = authenticationContext.getSubcontext(StorageAuthenticationContext.class, false);
         if (storageAuthenticationCtx == null) {
             log.debug("{} No StorageAuthenticationContext available within authentication context", getLogPrefix());
-            handleError(profileRequestContext, authenticationContext, "NoCredentials", AuthnEventIds.NO_CREDENTIALS);
+            handleError(profileRequestContext, authenticationContext, "InvalidAuthenticationContext",
+                    AuthnEventIds.INVALID_AUTHN_CTX);
             return false;
         }
         return true;
@@ -94,20 +94,16 @@ public class ValidateStorageAuthentication extends AbstractValidationAction {
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext,
             @Nonnull final AuthenticationContext authenticationContext) {
 
-        if (storageAuthenticationCtx.getAuthenticationEvent() != null) {
-            principalName = storageAuthenticationCtx.getAuthenticationEvent().getSubject();
-            log.info("{} Authenticated user as {}", getLogPrefix(), principalName);
-            recordSuccess();
-            buildAuthenticationResult(profileRequestContext, authenticationContext);
-            return;
-        }
-        log.debug("{} User agent was not authenticated", getLogPrefix(), principalName);
-        ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.INVALID_CREDENTIALS);
-        /*
-         * handleError(profileRequestContext, authenticationContext, String.format("%s:%s", response.getResultCode(),
-         * response.getMessage()), AuthnEventIds.INVALID_CREDENTIALS);
+        /**
+         * If there is storage context in this phase we may assume it containing event and subject. If that is not the
+         * case we are dealing with programming error is okay to lead to runtime error.
          */
-        recordFailure();
+        principalName = storageAuthenticationCtx.getAuthenticationEvent().getSubject();
+        log.info("{} Authenticated user as {}", getLogPrefix(), principalName);
+        recordSuccess();
+        buildAuthenticationResult(profileRequestContext, authenticationContext);
+        return;
+
     }
 
     /** {@inheritDoc} */
