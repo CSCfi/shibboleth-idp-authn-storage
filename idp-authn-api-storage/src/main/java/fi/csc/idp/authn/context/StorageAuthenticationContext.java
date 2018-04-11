@@ -29,6 +29,7 @@ import org.opensaml.messaging.context.BaseContext;
 
 import fi.csc.idp.authn.storage.AuthenticationEvent;
 
+/** Storage Authentication Context. Stores authentication event. */
 public class StorageAuthenticationContext extends BaseContext {
 
     /** Authentication event located from storage. */
@@ -38,32 +39,32 @@ public class StorageAuthenticationContext extends BaseContext {
     private String username;
 
     /**
-     * epoch timestamp for events issued before authenticationEventNotBefore not be accepted. 0 means there is no
-     * timestamp.
+     * Time in milliseconds since the epoch for events issued before not be accepted. 0 means there is no value to be
+     * checked.
      */
     private long authenticationEventNotBefore = 0;
 
     /**
-     * Get epoch timestamp for events issued before authenticationEventNotBefore not be accepted. 0 means there is no
-     * timestamp.
+     * Get time in milliseconds since the epoch for events issued before not be accepted. 0 means there is no value to
+     * be checked.
      * 
-     * @return epoch timestamp for events issued before authenticationEventNotBefore not be accepted. 0 means there is
-     *         no timestamp.
+     * @return time in milliseconds since the epoch for events issued before not be accepted. 0 means there is no value
+     *         to be checked.
      */
     public long getAuthenticationEventNotBefore() {
         return authenticationEventNotBefore;
     }
 
     /**
-     * Set epoch timestamp for events issued before authenticationEventNotBefore not be accepted. 0 means there is no
-     * timestamp.
+     * Set time in milliseconds since the epoch for events issued before not be accepted. 0 means there is no value to
+     * be checked.
      * 
-     * @param tsNotBefore epoch timestamp for events issued before authenticationEventNotBefore not be accepted. 0 means
-     *            there is no timestamp.
+     * @param tsNotBefore time in milliseconds since the epoch for events issued before not be accepted. 0 means there
+     *            is no value to be checked.
      */
     public void setAuthenticationEventNotBefore(@Nullable String tsNotBefore) {
         if (tsNotBefore != null) {
-            // Will cause script to fail if called with bad argument
+            // Will cause MFA script to fail (NumberformatException) if called with bad argument
             authenticationEventNotBefore = Long.parseLong(tsNotBefore);
         } else {
             authenticationEventNotBefore = 0;
