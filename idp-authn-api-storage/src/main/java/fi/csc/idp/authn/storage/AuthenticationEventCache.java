@@ -25,8 +25,11 @@ package fi.csc.idp.authn.storage;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.concurrent.locks.ReentrantLock;
+
 import javax.annotation.Nonnull;
 import net.shibboleth.utilities.java.support.annotation.Duration;
+import net.shibboleth.utilities.java.support.annotation.constraint.NonnullAfterInit;
 import net.shibboleth.utilities.java.support.annotation.constraint.NotEmpty;
 import net.shibboleth.utilities.java.support.annotation.constraint.Positive;
 import net.shibboleth.utilities.java.support.annotation.constraint.ThreadSafeAfterInit;
@@ -43,13 +46,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Manages stepup/mfa authentication events in client-side storage.
- * 
- * TODO: Make the class thread safe as advertised.
- * 
+ * Manages authentication events in client-side and possibly back-side storage.
  * <p>
- * This class is thread-safe and uses a synchronized method to prevent race conditions within the underlying store
- * (lacking an atomic "check and insert" operation).
+ * This class is thread-safe and uses a lock to prevent race conditions within the underlying store (lacking an atomic
+ * "check and insert" operation).
  * </p>
  */
 @ThreadSafeAfterInit
@@ -57,6 +57,9 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
 
     /** Logger. */
     private final Logger log = LoggerFactory.getLogger(AuthenticationEventCache.class);
+
+    /** Lock to control access to storage. */
+    private static ReentrantLock lock = new ReentrantLock();
 
     /** cache context for reference values . */
     private final static String REF_CTX = AuthenticationEventCache.class.getName() + "_REF_CTX";
@@ -70,7 +73,11 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
     /** Event storage for the authentication cache. By default Event store is Reference store. */
     private StorageService eventStorage;
 
-    /** Lifetime of revocation entry. Default value: 6 hours */
+    /** Salt for hashing user to key. */
+    @NonnullAfterInit
+    private String userSalt;
+
+    /** Lifetime of revocation entry. Default value: 7 days */
     @Positive
     @Duration
     private long expires;
@@ -79,7 +86,7 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
      * Constructor.
      */
     public AuthenticationEventCache() {
-        expires = 6 * 60 * 60 * 1000;
+        expires = 7 * 24 * 60 * 60 * 1000;
     }
 
     /**
@@ -91,6 +98,11 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
     public void setEntryExpiration(@Positive @Duration final long entryExpiration) {
         expires = Constraint.isGreaterThan(0, entryExpiration,
                 "revocation cache entry expiration must be greater than 0");
+    }
+
+    public void setUserSalt(String salt) {
+        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
+        userSalt = Constraint.isNotNull(salt, "User salt cannot be null");
     }
 
     /**
@@ -123,6 +135,9 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
         if (referenceStorage == null) {
             throw new ComponentInitializationException("Reference StorageService cannot be null");
         }
+        if (userSalt == null) {
+            throw new ComponentInitializationException("User salt cannot be null");
+        }
         // By default Event store is Reference store.
         if (eventStorage == null) {
             eventStorage = referenceStorage;
@@ -133,8 +148,9 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
     public AuthenticationEvent locate(@Nonnull @NotEmpty final String userKey) {
         String key;
         // TODO: replace with salted digest
-        key = DigestUtils.sha1Hex(userKey);
+        key = DigestUtils.sha256Hex(userKey + userSalt);
         log.debug("User {} hashed to {}", userKey, key);
+        lock.lock();
         try {
             StorageRecord refEntry = referenceStorage.read(REF_CTX, key);
             if (refEntry != null) {
@@ -150,16 +166,18 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
             }
         } catch (IOException e) {
             log.error("Exception reading/writing to storage service {}", e);
+        } finally {
+            lock.unlock();
         }
         return null;
     }
 
-    public synchronized boolean set(@Nonnull @NotEmpty final String userKey,
-            @Nonnull @NotEmpty final AuthenticationEvent value) {
+    public boolean set(@Nonnull @NotEmpty final String userKey, @Nonnull @NotEmpty final AuthenticationEvent value) {
         String key;
         // TODO: replace with salted digest
-        key = DigestUtils.sha1Hex(userKey);
+        key = DigestUtils.sha256Hex(userKey + userSalt);
         log.debug("User {} hashed to {}", userKey, key);
+        lock.lock();
         try {
             boolean success = referenceStorage.create(REF_CTX, key, value.getID(), System.currentTimeMillis() + expires)
                     || referenceStorage.update(REF_CTX, key, value.getID(), System.currentTimeMillis() + expires);
@@ -179,6 +197,8 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
         } catch (IOException e) {
             log.error("Exception reading/writing to storage service, returning {}", e);
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 }
