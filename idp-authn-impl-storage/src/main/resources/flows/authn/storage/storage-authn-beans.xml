@@ -34,8 +34,8 @@
         scope="prototype" p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache" />
 
     <bean id="shibboleth.AuthenticationEventCache" class="fi.csc.idp.authn.storage.AuthenticationEventCache"
-        depends-on="shibboleth.LoggingService"
-        p:entryExpiration="#{'%{idp.oidc.revocationCache.authorizeCode.lifetime:PT6H}'}"
+        depends-on="shibboleth.LoggingService" p:userSalt="this_is_my_not_so_secret_salt"
+        p:entryExpiration="#{'%{idp.storageauthn.authenticationevent.lifetime:PT168H}'}"
         p:referenceStorage-ref="shibboleth.ClientPersistentStorageService" />
 
     <bean id="PopulateSubjectCanonicalizationContext"
