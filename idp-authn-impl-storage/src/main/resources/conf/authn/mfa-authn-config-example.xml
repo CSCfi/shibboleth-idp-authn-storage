@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:c="http://www.springframework.org/schema/c" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+
+    default-init-method="initialize" default-destroy-method="destroy">
+
+    <!-- Example file storing Password authentication result to client-side storage, retrievable by user authenticated by 
+        IPAddress -->
+
+    <util:map id="shibboleth.authn.MFA.TransitionMap">
+
+        <entry key="">
+            <bean parent="shibboleth.authn.MFA.Transition" p:nextFlow="authn/IPAddress" />
+        </entry>
+
+        <entry key="authn/IPAddress">
+            <bean parent="shibboleth.authn.MFA.Transition" p:nextFlow="authn/storage" />
+            <!-- Use following instead if you want to control forceAuthn and or revocation. 
+            <bean parent="shibboleth.authn.MFA.Transition" p:nextFlowStrategy-ref="doStorageWithRevocation" /> 
+            -->
+        </entry>
+
+        <entry key="authn/storage">
+            <bean parent="shibboleth.authn.MFA.Transition">
+                <property name="nextFlowStrategyMap">
+                    <map>
+                        <!-- If we do not have a storage event we perform password -->
+                        <entry key="ReselectFlow" value="authn/Password" />
+                    </map>
+                </property>
+            </bean>
+        </entry>
+
+        <entry key="authn/Password">
+            <bean parent="shibboleth.authn.MFA.Transition" p:nextFlow="authn/store" />
+        </entry>
+
+        <!-- An implicit final rule will return whatever the final flow returns. -->
+    </util:map>
+
+    <!-- This example assumes attribute named "revok" is a string value parsable as long and interpreted as ms from epoch. -->
+    <bean id="doStorageWithRevocation" parent="shibboleth.ContextFunctions.Scripted" factory-method="inlineScript"
+        p:customObject-ref="shibboleth.AttributeResolverService">
+        <constructor-arg>
+            <value>
+            <![CDATA[
+            nextFlow = "authn/storage";
+            // Set up for an attribute lookup.
+            authCtx = input.getSubcontext("net.shibboleth.idp.authn.context.AuthenticationContext");
+            mfaCtx = authCtx.getSubcontext("net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext");
+            // Attributes are needed for second factor.
+            resCtx = input.getSubcontext(
+            "net.shibboleth.idp.attribute.resolver.context.AttributeResolutionContext", true);
+            // Look up the username
+            usernameLookupStrategyClass = Java.type("net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy");
+            usernameLookupStrategy = new usernameLookupStrategyClass();
+            resCtx.setPrincipal(usernameLookupStrategy.apply(input));
+            resCtx.getRequestedIdPAttributeNames().add("revok");
+            resCtx.resolveAttributes(custom);
+            //Pass the resolved attribute to context
+            if (resCtx.getResolvedIdPAttributes().get("revok")!=null){
+              stCtx = authCtx.getSubcontext("fi.csc.idp.authn.context.StorageAuthenticationContext", true);
+              stCtx.setAuthenticationEventNotBefore(resCtx.getResolvedIdPAttributes().get("revok").getValues().get(0).getValue());
+            }
+            input.removeSubcontext(resCtx);
+            nextFlow; // perform storage flow 
+            ]]>
+            </value>
+        </constructor-arg>
+    </bean>
+
+</beans>
+
