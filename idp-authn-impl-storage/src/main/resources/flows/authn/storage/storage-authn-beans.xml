@@ -14,7 +14,7 @@
 
     <bean class="net.shibboleth.ext.spring.config.IdentifiableBeanPostProcessor" />
     <bean class="net.shibboleth.idp.profile.impl.ProfileActionBeanPostProcessor" />
-    
+
     <import resource="../../../conf/authn/storage-authn-config.xml" />
 
     <bean id="PopulateClientStorageLoadContext"
@@ -36,9 +36,10 @@
         scope="prototype" p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache" />
 
     <bean id="shibboleth.AuthenticationEventCache" class="fi.csc.idp.authn.storage.AuthenticationEventCache"
-        depends-on="shibboleth.LoggingService" p:userSalt="this_is_my_not_so_secret_salt"
+        depends-on="shibboleth.LoggingService" p:userSalt="%{idp.storageauthn.salt}"
         p:entryExpiration="#{'%{idp.storageauthn.authenticationevent.lifetime:PT168H}'}"
-        p:referenceStorage-ref="shibboleth.ClientPersistentStorageService" />
+        p:referenceStorage-ref="#{'%{idp.storageauthn.reference.StorageService:shibboleth.ClientPersistentStorageService}'.trim()}"
+        p:eventStorage-ref="#{'%{idp.storageauthn.event.StorageService:shibboleth.ClientPersistentStorageService}'.trim()}" />
 
     <bean id="PopulateSubjectCanonicalizationContext"
         class="net.shibboleth.idp.authn.impl.PopulateSubjectCanonicalizationContext" scope="prototype"
@@ -52,5 +53,5 @@
         p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache"
         p:storageUsernameAuthenticationFlowDescriptors-ref="StorageUsernameAuthenticationFlows"
         p:storageAuthenticationEventAuthenticationFlowDescriptors-ref="StorageAuthenticationEventAuthenticationFlows" />
-   
+
 </beans>
