@@ -6,7 +6,7 @@
         <evaluate expression="PopulateClientStorageLoadContext" />
         <evaluate expression="'proceed'" />
         <transition on="proceed" to="ClientStorageLoad" />
-        <transition on="NoLoadNeeded" to="StorageAuthenticationEvent" />
+        <transition on="NoLoadNeeded" to="StorageAuthentication" />
     </action-state>
 
     <subflow-state id="ClientStorageLoad" subflow="client-storage/read">
