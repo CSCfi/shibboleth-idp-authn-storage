@@ -34,6 +34,10 @@
             <artifactId>idp-authn-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>net.shibboleth.idp</groupId>
+            <artifactId>idp-session-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>fi.csc.idp.authn.storage</groupId>
             <artifactId>idp-authn-api-storage</artifactId>
         </dependency>

@@ -23,45 +23,30 @@
 
 package fi.csc.idp.authn.impl;
 
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import net.shibboleth.idp.authn.AbstractExtractionAction;
-import net.shibboleth.idp.authn.AuthenticationFlowDescriptor;
-import net.shibboleth.idp.authn.AuthenticationResult;
 import net.shibboleth.idp.authn.AuthnEventIds;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
-import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
-import net.shibboleth.idp.authn.principal.UsernamePrincipal;
+import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy;
+
 import org.opensaml.profile.action.ActionSupport;
 import net.shibboleth.utilities.java.support.annotation.constraint.NonnullAfterInit;
-import net.shibboleth.utilities.java.support.annotation.constraint.NonnullElements;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.component.ComponentSupport;
 import net.shibboleth.utilities.java.support.logic.Constraint;
 
-import org.opensaml.messaging.context.navigate.ChildContextLookup;
-import org.opensaml.profile.action.EventIds;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
-
 import fi.csc.idp.authn.context.StorageAuthenticationContext;
 import fi.csc.idp.authn.storage.AuthenticationEvent;
 import fi.csc.idp.authn.storage.AuthenticationEventCache;
 
 /**
  * Class locating existing storage authentication event on the basis of user authenticated by prior authentication flow
- * in mfa authentication sequence. The authentication flows providing user information are presented in order of
- * preference and set by setStorageUsernameAuthenticationFlowDescriptors. The first authentication event located is
- * stored to context for further evaluation.
+ * in mfa authentication sequence.
  */
 @SuppressWarnings({"rawtypes"})
 public class ExtractStorageAuthenticationEvent extends AbstractExtractionAction {
@@ -74,59 +59,28 @@ public class ExtractStorageAuthenticationEvent extends AbstractExtractionAction 
     @NonnullAfterInit
     private AuthenticationEventCache authenticationEventCache;
 
-    /** Lookup function for the context to evaluate. */
+    /** Lookup strategy for username to search authentication event for. */
     @Nonnull
-    private Function<ProfileRequestContext, MultiFactorAuthenticationContext> multiFactorContextLookupStrategy;
-
-    /** A subordinate {@link MultiFactorAuthenticationContext}, if any. */
-    @Nullable
-    private MultiFactorAuthenticationContext mfaContext;
+    private Function<ProfileRequestContext, String> usernameLookupStrategy;
 
     /** User name of the user identified by previous MFA authentication. */
     @Nonnull
-    private List<String> usernames;
-
-    /** Flows that provide username to search authentication event for. */
-    @Nonnull
-    private List<String> storageUserNameAuthenticationFlowIds;
+    private String username;
 
     /** Constructor. */
-    @SuppressWarnings("unchecked")
     ExtractStorageAuthenticationEvent() {
-        storageUserNameAuthenticationFlowIds = new ArrayList<String>();
-        usernames = new ArrayList<String>();
-        multiFactorContextLookupStrategy =
-                Functions.compose(new ChildContextLookup(MultiFactorAuthenticationContext.class),
-                        new ChildContextLookup(AuthenticationContext.class));
-
+        usernameLookupStrategy = new CanonicalUsernameLookupStrategy();
     }
 
     /**
-     * Set the lookup strategy to use for the context to evaluate.
+     * Set the lookup strategy to use for the username to search authentication event for.
      * 
      * @param strategy lookup strategy
      */
-    public void setMultiFactorContextLookupStrategy(
-            @Nonnull final Function<ProfileRequestContext, MultiFactorAuthenticationContext> strategy) {
+    public void setUsernameLookupStrategy(@Nonnull final Function<ProfileRequestContext, String> strategy) {
         ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
 
-        multiFactorContextLookupStrategy =
-                Constraint.isNotNull(strategy, "MultiFactorAuthenticationContext lookup strategy cannot be null");
-    }
-
-    /**
-     * Set the {@link AuthenticationFlowDescriptor} providing usernames to search authentication event for.
-     * 
-     * @param flows providing usernames to search authentication event for.
-     */
-    public void setStorageUsernameAuthenticationFlowDescriptors(
-            @Nonnull @NonnullElements final Iterable<AuthenticationFlowDescriptor> flows) {
-        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
-        Constraint.isNotNull(flows, "Flow collection cannot be null");
-        for (final AuthenticationFlowDescriptor desc : Iterables.filter(flows, Predicates.notNull())) {
-            storageUserNameAuthenticationFlowIds.add(desc.getId());
-        }
-
+        usernameLookupStrategy = Constraint.isNotNull(strategy, "Username lookup strategy cannot be null");
     }
 
     /**
@@ -161,24 +115,9 @@ public class ExtractStorageAuthenticationEvent extends AbstractExtractionAction 
     protected boolean doPreExecute(@Nonnull final ProfileRequestContext profileRequestContext,
             @Nonnull final AuthenticationContext authenticationContext) {
 
-        mfaContext = multiFactorContextLookupStrategy.apply(profileRequestContext);
-        if (mfaContext == null) {
-            log.error("{} No MultiFactorAuthenticationContext found by lookup strategy", getLogPrefix());
-            ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_PROFILE_CTX);
-            return false;
-        }
-        for (String flowId : storageUserNameAuthenticationFlowIds) {
-            AuthenticationResult result = mfaContext.getActiveResults().get(flowId);
-            if (result != null && result.getSubject() != null) {
-                for (Principal principal : result.getSubject().getPrincipals(UsernamePrincipal.class)) {
-                    usernames.add(principal.getName());
-                    log.debug("{} resolved username {} from flow {}", getLogPrefix(), principal.getName(), flowId);
-
-                }
-            }
-        }
-        if (usernames.isEmpty()) {
-            log.debug("{} No existing mfa usernames available, nothing to do", getLogPrefix());
+        username = usernameLookupStrategy.apply(profileRequestContext);
+        if (username == null) {
+            log.warn("{} No existing mfa username available, nothing to do", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.NO_CREDENTIALS);
             return false;
         }
@@ -190,18 +129,15 @@ public class ExtractStorageAuthenticationEvent extends AbstractExtractionAction 
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext,
             @Nonnull final AuthenticationContext authenticationContext) {
 
-        for (String username : usernames) {
-            AuthenticationEvent event = authenticationEventCache.locate(username);
-            if (event != null) {
-                log.debug(
-                        "{} Authentication event located {} for user {}, setting it to storage authentication context",
-                        getLogPrefix(), event.serialize(), username);
-                StorageAuthenticationContext storageAuthenticationContext =
-                        authenticationContext.getSubcontext(StorageAuthenticationContext.class, true);
-                storageAuthenticationContext.setAuthenticationEvent(event);
-                storageAuthenticationContext.setUsername(username);
-                return;
-            }
+        AuthenticationEvent event = authenticationEventCache.locate(username);
+        if (event != null) {
+            log.debug("{} Authentication event located {} for user {}, setting it to storage authentication context",
+                    getLogPrefix(), event.serialize(), username);
+            StorageAuthenticationContext storageAuthenticationContext =
+                    authenticationContext.getSubcontext(StorageAuthenticationContext.class, true);
+            storageAuthenticationContext.setAuthenticationEvent(event);
+            storageAuthenticationContext.setUsername(username);
+            return;
         }
         log.debug("{} no user credentials, authentication event not available", getLogPrefix());
         ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.NO_CREDENTIALS);

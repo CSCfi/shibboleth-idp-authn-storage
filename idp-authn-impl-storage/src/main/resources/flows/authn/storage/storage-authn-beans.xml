@@ -23,8 +23,7 @@
 
 
     <bean id="ExtractStorageAuthenticationEvent" class="fi.csc.idp.authn.impl.ExtractStorageAuthenticationEvent"
-        scope="prototype" p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache"
-        p:storageUsernameAuthenticationFlowDescriptors-ref="StorageUsernameAuthenticationFlows" />
+        scope="prototype" p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache" />
 
     <bean id="VerifyStorageAuthenticationEvent" class="fi.csc.idp.authn.impl.VerifyStorageAuthenticationEvent"
         p:defaultLimits-ref="AuthenticationEventLimits" p:relyingPartyLimits-ref="RelyingPartyLimits" scope="prototype" />
