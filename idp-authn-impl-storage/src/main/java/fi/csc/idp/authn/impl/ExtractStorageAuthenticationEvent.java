@@ -130,13 +130,13 @@ public class ExtractStorageAuthenticationEvent extends AbstractExtractionAction 
             @Nonnull final AuthenticationContext authenticationContext) {
 
         AuthenticationEvent event = authenticationEventCache.locate(username);
+        StorageAuthenticationContext storageAuthenticationContext =
+                authenticationContext.getSubcontext(StorageAuthenticationContext.class, true);
+        storageAuthenticationContext.setUsername(username);
         if (event != null) {
             log.debug("{} Authentication event located {} for user {}, setting it to storage authentication context",
                     getLogPrefix(), event.serialize(), username);
-            StorageAuthenticationContext storageAuthenticationContext =
-                    authenticationContext.getSubcontext(StorageAuthenticationContext.class, true);
             storageAuthenticationContext.setAuthenticationEvent(event);
-            storageAuthenticationContext.setUsername(username);
             return;
         }
         log.debug("{} no user credentials, authentication event not available", getLogPrefix());
