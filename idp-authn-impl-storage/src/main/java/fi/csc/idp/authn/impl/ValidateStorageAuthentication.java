@@ -30,7 +30,6 @@ import net.shibboleth.idp.authn.AbstractValidationAction;
 import net.shibboleth.idp.authn.AuthnEventIds;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.authn.principal.UsernamePrincipal;
-import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.action.EventIds;
 import org.opensaml.profile.context.ProfileRequestContext;
 import net.shibboleth.utilities.java.support.annotation.constraint.NotEmpty;
@@ -73,16 +72,18 @@ public class ValidateStorageAuthentication extends AbstractValidationAction {
             return false;
         }
         if (authenticationContext.getAttemptedFlow() == null) {
-            log.debug("{} No attempted flow within authentication context", getLogPrefix());
-            ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_PROFILE_CTX);
+            log.warn("{} No attempted flow within authentication context", getLogPrefix());
+            handleError(profileRequestContext, authenticationContext, "InvalidProfileContext",
+                    EventIds.INVALID_PROFILE_CTX);
             recordFailure();
             return false;
         }
         storageAuthenticationCtx = authenticationContext.getSubcontext(StorageAuthenticationContext.class, false);
         if (storageAuthenticationCtx == null) {
-            log.debug("{} No StorageAuthenticationContext available within authentication context", getLogPrefix());
+            log.warn("{} No StorageAuthenticationContext available within authentication context", getLogPrefix());
             handleError(profileRequestContext, authenticationContext, "InvalidAuthenticationContext",
                     AuthnEventIds.INVALID_AUTHN_CTX);
+            recordFailure();
             return false;
         }
         return true;
@@ -94,16 +95,19 @@ public class ValidateStorageAuthentication extends AbstractValidationAction {
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext,
             @Nonnull final AuthenticationContext authenticationContext) {
 
-        /**
-         * If there is storage context in this phase we may assume it containing event and subject. If that is not the
-         * case we are dealing with programming error is okay to lead to runtime error.
-         */
+        if (storageAuthenticationCtx.getAuthenticationEvent() == null
+                || storageAuthenticationCtx.getAuthenticationEvent().getSubject() == null) {
+            // Should not ever come here if flow works correctly
+            log.error("{} no user credentials, authentication event not available", getLogPrefix());
+            recordFailure();
+            handleError(profileRequestContext, authenticationContext, "NoCredentials", AuthnEventIds.NO_CREDENTIALS);
+            return;
+        }
         principalName = storageAuthenticationCtx.getAuthenticationEvent().getSubject();
         log.info("{} Authenticated user as {}", getLogPrefix(), principalName);
         recordSuccess();
         buildAuthenticationResult(profileRequestContext, authenticationContext);
         return;
-
     }
 
     /** {@inheritDoc} */
