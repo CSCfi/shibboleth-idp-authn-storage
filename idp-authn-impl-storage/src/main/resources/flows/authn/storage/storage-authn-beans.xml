@@ -21,7 +21,6 @@
         class="org.opensaml.storage.impl.client.PopulateClientStorageLoadContext" scope="prototype"
         p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
 
-
     <bean id="ExtractStorageAuthenticationEvent" class="fi.csc.idp.authn.impl.ExtractStorageAuthenticationEvent"
         scope="prototype" p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache" />
 
@@ -49,8 +48,6 @@
         p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
 
     <bean id="StoreAuthenticationEvent" class="fi.csc.idp.authn.impl.StoreAuthenticationEvent" scope="prototype"
-        p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache"
-        p:storageUsernameAuthenticationFlowDescriptors-ref="StorageUsernameAuthenticationFlows"
-        p:storageAuthenticationEventAuthenticationFlowDescriptors-ref="StorageAuthenticationEventAuthenticationFlows" />
+        p:authenticationEventCache-ref="shibboleth.AuthenticationEventCache" />
 
 </beans>

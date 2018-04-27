@@ -10,22 +10,6 @@
     default-init-method="initialize" default-destroy-method="destroy">
 
 
-    <!-- Authentication flows used in storage authentication -->
-    <bean id="authn/IPAddress" parent="shibboleth.AuthenticationFlow" />
-    <bean id="authn/Password" parent="shibboleth.AuthenticationFlow" />
-
-    <!-- List authentication flow(s) used to identify user. The username of the first listed flow able to provide it will 
-        be used as the key -->
-    <util:list id="StorageUsernameAuthenticationFlows">
-        <ref bean="authn/IPAddress" />
-    </util:list>
-
-    <!-- List flow(s) of which result is stored as authentication event. The result of the first flow providing result is 
-        stored only -->
-    <util:list id="StorageAuthenticationEventAuthenticationFlows">
-        <ref bean="authn/Password" />
-    </util:list>
-
     <!-- Parent bean to inherit authentication event limits from -->
     <bean id="RPLimits" class="fi.csc.idp.authn.storage.AuthenticationEventRelyingPartyLimits" />
 
@@ -36,11 +20,8 @@
     <!-- Relying party specific limits for reusing authentication events -->
     <!-- Only one entry per one rp is allowed. Otherwise behavior is undetermined. -->
     <util:list id="RelyingPartyLimits">
-        <!-- 
-        <bean id="example1" parent="RPLimits" p:relyingPartyId="entityidofexample1" p:authenticationMaxAge="PT24H" p:lastAppliedMaxAge="PT4H" 
-          p:appliedTimesMax="1" /> 
-        <bean id="example2" parent="RPLimits" p:relyingPartyId="entityidofexample2" p:authenticationMaxAge="PT1H"/> 
-        -->
+        <!-- <bean id="example1" parent="RPLimits" p:relyingPartyId="entityidofexample1" p:authenticationMaxAge="PT24H" p:lastAppliedMaxAge="PT4H" 
+            p:appliedTimesMax="1" /> <bean id="example2" parent="RPLimits" p:relyingPartyId="entityidofexample2" p:authenticationMaxAge="PT1H"/> -->
     </util:list>
 
 </beans>
