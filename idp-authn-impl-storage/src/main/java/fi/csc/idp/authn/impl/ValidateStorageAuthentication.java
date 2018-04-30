@@ -29,6 +29,7 @@ import javax.security.auth.Subject;
 import net.shibboleth.idp.authn.AbstractValidationAction;
 import net.shibboleth.idp.authn.AuthnEventIds;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
+import net.shibboleth.idp.authn.context.SubjectCanonicalizationContext;
 import net.shibboleth.idp.authn.principal.UsernamePrincipal;
 import org.opensaml.profile.action.EventIds;
 import org.opensaml.profile.context.ProfileRequestContext;
@@ -116,6 +117,17 @@ public class ValidateStorageAuthentication extends AbstractValidationAction {
     protected Subject populateSubject(@Nonnull final Subject subject) {
         subject.getPrincipals().add(new UsernamePrincipal(principalName));
         return subject;
+    }
+
+    /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void buildAuthenticationResult(@Nonnull final ProfileRequestContext profileRequestContext,
+            @Nonnull final AuthenticationContext authenticationContext) {
+        super.buildAuthenticationResult(profileRequestContext, authenticationContext);
+
+        // We have already a canonicalized user name, phase may be passed
+        profileRequestContext.getSubcontext(SubjectCanonicalizationContext.class, true).setPrincipalName(principalName);
     }
 
 }

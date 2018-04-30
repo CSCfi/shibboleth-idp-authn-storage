@@ -39,10 +39,6 @@
         p:referenceStorage-ref="#{'%{idp.storageauthn.reference.StorageService:shibboleth.ClientPersistentStorageService}'.trim()}"
         p:eventStorage-ref="#{'%{idp.storageauthn.event.StorageService:shibboleth.ClientPersistentStorageService}'.trim()}" />
 
-    <bean id="PopulateSubjectCanonicalizationContext"
-        class="net.shibboleth.idp.authn.impl.PopulateSubjectCanonicalizationContext" scope="prototype"
-        p:availableFlows-ref="shibboleth.PostLoginSubjectCanonicalizationFlows" />
-
     <bean id="PopulateClientStorageSaveContext"
         class="org.opensaml.storage.impl.client.PopulateClientStorageSaveContext" scope="prototype"
         p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
