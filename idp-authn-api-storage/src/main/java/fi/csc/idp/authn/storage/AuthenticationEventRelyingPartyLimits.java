@@ -78,7 +78,7 @@ public class AuthenticationEventRelyingPartyLimits {
     }
 
     /**
-     * Set Max age acceptable inm s for the authentication. 0 means infinite.
+     * Set Max age acceptable in ms for the authentication. 0 means infinite.
      * 
      * @param maxAge max age acceptable in ms for the authentication. 0 means infinite.
      */
