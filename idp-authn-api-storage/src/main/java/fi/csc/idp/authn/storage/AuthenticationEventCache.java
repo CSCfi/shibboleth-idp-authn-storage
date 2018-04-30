@@ -144,6 +144,13 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
         }
     }
 
+    /**
+     * Locates a authentication event for the user. The reference of the event is searched from client-side storage. The
+     * event itself may be on client-side or server-side storage.
+     * 
+     * @param userKey key to locate the event reference from cliennt-side storage
+     * @return authentication event if found, otherwise null.
+     */
     @SuppressWarnings("rawtypes")
     public AuthenticationEvent locate(@Nonnull @NotEmpty final String userKey) {
         String key;
@@ -171,6 +178,14 @@ public class AuthenticationEventCache extends AbstractIdentifiableInitializableC
         return null;
     }
 
+    /**
+     * Sets a authentication event for the user. The reference of the event is stored to client-side storage. The event
+     * itself may be set to client-side or server-side storage.
+     * 
+     * @param userKey key to locate the event reference from cliennt-side storage
+     * @param value authentication event value to store
+     * @return
+     */
     public boolean set(@Nonnull @NotEmpty final String userKey, @Nonnull @NotEmpty final AuthenticationEvent value) {
         String key;
         key = DigestUtils.sha256Hex(userKey + userSalt).substring(0, 64);
