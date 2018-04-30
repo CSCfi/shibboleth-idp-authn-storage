@@ -34,10 +34,11 @@
         <transition to="proceed" />
     </subflow-state>
 
-    <!-- As a "fall-through" method, remap all errors to ReselectFlow. -->
+    <!-- As a "fall-through" method, remap most errors to ReselectFlow. -->
     <global-transitions>
         <transition on="NoCredentials" to="ReselectFlow" />
         <transition on="InvalidCredentials" to="ReselectFlow" />
+        <transition on="InvalidAuthenticationContext" to="ReselectFlow" />
     </global-transitions>
 
     <bean-import resource="storage-authn-beans.xml" />
