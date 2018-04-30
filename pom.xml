@@ -1,4 +1,4 @@
-<!-- The MIT License Copyright (c) 2015 CSC - IT Center for Science, http://www.csc.fi Permission is hereby granted, free 
+<!-- The MIT License Copyright (c) 2018 CSC - IT Center for Science, http://www.csc.fi Permission is hereby granted, free 
     of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in 
     the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, 
     sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject 
@@ -59,7 +59,7 @@
     <scm>
         <url>https://github.com/CSCfi/shibboleth-idp-authn-storage</url>
         <connection>scm:git:git://github.com/CSCfi/shibboleth-idp-authn-storage.git</connection>
-        <developerConnection>scm:git:https://github.com/CSCfi/shibboleth-idp-authn-storagey</developerConnection>
+        <developerConnection>scm:git:https://github.com/CSCfi/shibboleth-idp-authn-storage</developerConnection>
         <tag>HEAD</tag>
     </scm>
     <dependencyManagement>
