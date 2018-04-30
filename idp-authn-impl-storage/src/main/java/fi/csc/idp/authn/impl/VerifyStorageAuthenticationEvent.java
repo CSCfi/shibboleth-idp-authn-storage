@@ -89,12 +89,20 @@ public class VerifyStorageAuthenticationEvent extends AbstractAuthenticationActi
                 Constraint.isNotNull(strategy, "RelyingPartyContext lookup strategy cannot be null");
     }
 
+    /**
+     * Set default limits for validation authentication event.
+     * @param defaultLimits default limits for validation authentication event
+     */
     public void setDefaultLimits(@Nonnull AuthenticationEventRelyingPartyLimits defaultLimits) {
         ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
         Constraint.isNotNull(defaultLimits, "Default limits cannot be null");
         defaultRPLimits = defaultLimits;
     }
 
+    /**
+     * Set rp limits for validation authentication event.
+     * @param limits rp limits for validation authentication event
+     */
     public void setRelyingPartyLimits(@Nonnull List<AuthenticationEventRelyingPartyLimits> limits) {
         ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
         Constraint.isNotNull(limits, "RP limits cannot be null");
@@ -123,8 +131,8 @@ public class VerifyStorageAuthenticationEvent extends AbstractAuthenticationActi
             return false;
         }
         storageAuthenticationCtx = authenticationContext.getSubcontext(StorageAuthenticationContext.class, false);
-        if (storageAuthenticationCtx == null) {
-            log.debug("{} No StorageAuthenticationContext available within authentication context", getLogPrefix());
+        if (storageAuthenticationCtx == null || storageAuthenticationCtx.getAuthenticationEvent() == null) {
+            log.warn("{} No authentication event. Implies misconfiguration.", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.INVALID_AUTHN_CTX);
             return false;
         }
