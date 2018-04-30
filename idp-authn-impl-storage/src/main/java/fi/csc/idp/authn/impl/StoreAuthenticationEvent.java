@@ -151,13 +151,15 @@ public class StoreAuthenticationEvent extends AbstractAuthenticationAction {
 
         storageAuthenticationCtx = authenticationContext.getSubcontext(StorageAuthenticationContext.class, false);
         if (storageAuthenticationCtx == null) {
-            log.debug("{} No StorageAuthenticationContext available within authentication context", getLogPrefix());
+            log.warn(
+                    "{} No StorageAuthenticationContext available within authentication context. Implies mfa configuration is bad.",
+                    getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.INVALID_AUTHN_CTX);
             return false;
         }
         username = storageAuthenticationCtx.getUsername();
         if (username == null) {
-            log.warn("{} No existing canicalized username available, nothing to do", getLogPrefix());
+            log.warn("{} username is not available, nothing to do. Implies mfa configuration is bad.", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.NO_CREDENTIALS);
             return false;
         }
