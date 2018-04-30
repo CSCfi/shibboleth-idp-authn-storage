@@ -83,8 +83,8 @@ public class UpdateStorageAuthenticationEvent extends AbstractAuthenticationActi
             return false;
         }
         storageAuthenticationCtx = authenticationContext.getSubcontext(StorageAuthenticationContext.class, false);
-        if (storageAuthenticationCtx == null) {
-            log.debug("{} No StorageAuthenticationContext available within authentication context", getLogPrefix());
+        if (storageAuthenticationCtx == null || storageAuthenticationCtx.getAuthenticationEvent() == null) {
+            log.warn("{} No authentication event. Implies misconfiguration.", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.INVALID_AUTHN_CTX);
             return false;
         }
@@ -96,14 +96,12 @@ public class UpdateStorageAuthenticationEvent extends AbstractAuthenticationActi
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext,
             @Nonnull final AuthenticationContext authenticationContext) {
 
-        /**
-         * If there is storage context in this phase we may assume it containing event. If that is not the case we are
-         * dealing with programming error is okay to lead to runtime error.
-         */
         storageAuthenticationCtx.getAuthenticationEvent().apply();
-        /** We choose to ignore failing the update. */
-        authenticationEventCache.set(storageAuthenticationCtx.getUsername(),
-                storageAuthenticationCtx.getAuthenticationEvent());
+        if (!authenticationEventCache.set(storageAuthenticationCtx.getUsername(),
+                storageAuthenticationCtx.getAuthenticationEvent())) {
+            log.error("{} Updating authentication event failed.", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.ACCOUNT_ERROR);
+        }
     }
 
 }
