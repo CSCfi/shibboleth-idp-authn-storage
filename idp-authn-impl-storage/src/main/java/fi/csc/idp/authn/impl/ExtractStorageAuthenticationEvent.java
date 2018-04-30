@@ -117,7 +117,7 @@ public class ExtractStorageAuthenticationEvent extends AbstractExtractionAction 
 
         username = usernameLookupStrategy.apply(profileRequestContext);
         if (username == null) {
-            log.warn("{} No existing mfa username available, nothing to do", getLogPrefix());
+            log.warn("{} username is not available, nothing to do.", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.NO_CREDENTIALS);
             return false;
         }
