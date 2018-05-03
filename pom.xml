@@ -16,7 +16,7 @@
     </parent>
     <groupId>fi.csc.idp.authn.storage</groupId>
     <artifactId>shibboleth-idp-authn-storage-parent</artifactId>
-    <version>0.5.1-SNAPSHOT</version>
+    <version>0.5.1</version>
     <packaging>pom</packaging>
     <modules>
         <module>idp-authn-api-storage</module>
@@ -59,7 +59,7 @@
         <url>https://github.com/CSCfi/shibboleth-idp-authn-storage</url>
         <connection>scm:git:git://github.com/CSCfi/shibboleth-idp-authn-storage.git</connection>
         <developerConnection>scm:git:https://github.com/CSCfi/shibboleth-idp-authn-storage</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v0.5.1</tag>
     </scm>
     <dependencyManagement>
         <dependencies>
